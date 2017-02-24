@@ -1,11 +1,12 @@
 name          := "reads"
 organization  := "ohnosequences"
-description   := "reads project"
+description   := ""
 
 bucketSuffix  := "era7.com"
 
-// libraryDependencies ++= Seq()
-
+libraryDependencies ++= Seq(
+  "ohnosequences" % "fastarious" %% "0.9.0-22-g3c42fd6"
+)
 
 // // For resolving dependency versions conflicts:
 // dependencyOverrides ++= Set()
