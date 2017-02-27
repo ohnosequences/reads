@@ -14,22 +14,34 @@ case object sequences {
     def dropTrailingUnder(quality: Int): Sequence =
       sequence dropWhileQuality { _ <= quality }
 
-    def dropWhileAverage(windowSize: Int, averageQuality: Real): Sequence = {
+    def longestPrefixWithExpectedErrorsBelow(threshold: BigDecimal): Sequence = {
 
       @annotation.tailrec
       def rec(acc: Sequence): Sequence =
         if(acc.isEmpty)
           acc
         else
-          if( (acc takeRight windowSize).quality.average <= averageQuality )
-            rec(acc dropRight windowSize)
-          else
+          if(acc.quality.expectedNumberOfErrors <= threshold)
             acc
+          else
+            rec(acc dropRight 1)
 
       rec(sequence)
     }
 
-    def longestSuffixOver(quality: Int): Sequence =
-      sequence takeWhileQuality { _ >= quality } }
+    def longestSuffixWithExpectedErrorsBelow(threshold: BigDecimal): Sequence = {
 
+      @annotation.tailrec
+      def rec(acc: Sequence): Sequence =
+        if(acc.isEmpty)
+          acc
+        else
+          if(acc.quality.expectedNumberOfErrors <= threshold)
+            acc
+          else
+            rec(acc drop 1)
+
+      rec(sequence)
+    }
+  }
 }

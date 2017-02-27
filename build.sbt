@@ -5,7 +5,7 @@ description   := ""
 bucketSuffix  := "era7.com"
 
 libraryDependencies ++= Seq(
-  "ohnosequences" %% "fastarious" % "0.9.0-23-g2a4de2a"
+  "ohnosequences" %% "fastarious" % "0.9.0-24-ge0d632e"
 )
 
 // // For resolving dependency versions conflicts:
@@ -19,3 +19,8 @@ libraryDependencies ++= Seq(
 
 // // This turns on fat-jar publishing during release process:
 // publishFatArtifact in Release := true
+
+// shows time for each test:
+testOptions in Test += Tests.Argument("-oD")
+// disables parallel exec
+parallelExecution in Test := false
