@@ -5,7 +5,7 @@ description   := ""
 bucketSuffix  := "era7.com"
 
 libraryDependencies ++= Seq(
-  "ohnosequences" %% "fastarious" % "0.9.0-24-ge0d632e"
+  "ohnosequences" %% "fastarious" % "0.9.0-25-g02189ba"
 )
 
 // // For resolving dependency versions conflicts:
