@@ -1,7 +1,6 @@
 package ohnosequences.reads
 
 import ohnosequences.fastarious.fastq._
-import spire.math.Real
 import spire.implicits._
 
 case object sequences {
@@ -21,7 +20,7 @@ case object sequences {
         if(acc.isEmpty)
           acc
         else
-          if(acc.quality.expectedNumberOfErrors <= threshold)
+          if(acc.quality.expectedErrors <= threshold)
             acc
           else
             rec(acc dropRight 1)
@@ -36,7 +35,7 @@ case object sequences {
         if(acc.isEmpty)
           acc
         else
-          if(acc.quality.expectedNumberOfErrors <= threshold)
+          if(acc.quality.expectedErrors <= threshold)
             acc
           else
             rec(acc drop 1)
