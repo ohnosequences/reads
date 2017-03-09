@@ -1,11 +1,152 @@
 package ohnosequences.reads
 
 import ohnosequences.fastarious._, fastq._, Quality._
+import spire.implicits._
 
 case object stats {
 
   type Position         = Int
   type ErrorProbability = BigDecimal
+
+  case class SizeStats(
+    val minSize : Int,
+    val meanSize: BigDecimal,
+    val maxSize : Int
+  )
+
+  implicit class sizeOps(val reads: Iterator[FASTQ]) extends AnyVal {
+
+    def sizeStats: SizeStats = {
+
+      val (minSize, sum, no, maxSize) =
+        reads.foldLeft( (Int.MaxValue: Int, 0:BigInt, 0:BigInt, 0) ) {
+
+          case ((min, s, n, max), read) => {
+
+            val l = read.value.length
+
+            val _min = if(l <= min) l else min
+            val _s  = s + l
+            val _n  = n + 1
+            val _max = if(l >= max) l else max
+
+            (_min, _s, _n, _max)
+          }
+        }
+
+      SizeStats(minSize, if(sum == 0) 0: BigDecimal else BigDecimal(sum) / BigDecimal(no), maxSize )
+    }
+  }
+
+  case class QualityStats(
+    val minExpectedErrors   : BigDecimal,
+    val meanExpectedErrors  : BigDecimal,
+    val maxExpectedErrors   : BigDecimal
+  )
+
+  implicit class qualityOps(val reads: Iterator[FASTQ]) extends AnyVal {
+
+    def qualityStats: QualityStats = {
+
+      val (minErr, sum, no, maxErr) =
+        reads.foldLeft( (Float.MaxValue: BigDecimal, 0:BigDecimal, 0:BigInt, 0: BigDecimal) ) {
+
+          case ((min, s, n, max), read) => {
+
+            val l = read.value.quality.expectedErrors
+
+            val _min = if(l <= min) l else min
+            val _s  = s + l
+            val _n  = n + 1
+            val _max = if(l >= max) l else max
+
+            (_min, _s, _n, _max)
+          }
+        }
+
+      QualityStats(minErr, if(sum == 0) 0: BigDecimal else sum / BigDecimal(no), maxErr )
+    }
+  }
+
+  case class PositionStats(
+    val maxPosition: Position,
+    val meanExpectedErrorsPerPosition: Seq[ErrorProbability],
+    val meanNs: Seq[BigDecimal],
+    val meanAs: Seq[BigDecimal],
+    val meanTs: Seq[BigDecimal],
+    val meanCs: Seq[BigDecimal],
+    val meanGs: Seq[BigDecimal]
+  )
+
+  val toCharError: Iterator[FASTQ] => Iterator[Seq[(Char,BigDecimal)]] =
+    _.map {
+      r =>
+        (r.value.sequence zip r.value.quality.scores.map(_.asPhredScore.errorProbability))
+    }
+
+  implicit class positionOps(val seqs: Iterator[Seq[(Char,ErrorProbability)]]) extends AnyVal {
+
+    def positionStats(maxPos: Int): PositionStats = {
+
+      val initialPositionData =
+        PositionData(
+          number = 0,
+          errorProbabilitySum = 0,
+          As = 0,
+          Ts = 0,
+          Cs = 0,
+          Gs = 0,
+          Ns = 0
+        )
+
+      val posDatas: Seq[PositionData] =
+        seqs.foldLeft[Seq[PositionData]]( (0 to maxPos).map { _ => initialPositionData } ){
+          (acc: Seq[PositionData], seq: Seq[(Char, ErrorProbability)]) =>
+            seq.zipWithIndex.foldLeft[Seq[PositionData]](acc) {
+              (pdatas: Seq[PositionData], ce: ((Char, ErrorProbability), Int)) => {
+
+                val ((char, errProb), pos) = ce
+
+                // get previous
+                val pdata = pdatas(pos)
+                // update
+                pdatas.updated(
+                  pos,
+                  PositionData(
+                    number    = pdata.number + 1,
+                    errorProbabilitySum  = pdata.errorProbabilitySum + errProb,
+                    As = if(char.toUpper == 'A') pdata.As + 1 else pdata.As,
+                    Ts = if(char.toUpper == 'T') pdata.Ts + 1 else pdata.Ts,
+                    Cs = if(char.toUpper == 'C') pdata.Cs + 1 else pdata.Cs,
+                    Gs = if(char.toUpper == 'G') pdata.Gs + 1 else pdata.Gs,
+                    Ns = if(char.toUpper == 'N') pdata.Ns + 1 else pdata.Ns
+                  )
+                )
+              }
+            }
+          }
+
+      PositionStats(
+        maxPosition = maxPos,
+        meanExpectedErrorsPerPosition = posDatas map { pd => if(pd.number == 0) 0: BigDecimal else pd.errorProbabilitySum / BigDecimal(pd.number) },
+        meanAs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.As) / BigDecimal(pd.number) },
+        meanTs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Ts) / BigDecimal(pd.number) },
+        meanCs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Cs) / BigDecimal(pd.number) },
+        meanGs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Gs) / BigDecimal(pd.number) },
+        meanNs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Ns) / BigDecimal(pd.number) }
+      )
+    }
+  }
+
+  case class PositionData(
+    val number: BigInt,
+    val errorProbabilitySum: BigDecimal,
+    val As: BigInt,
+    val Ts: BigInt,
+    val Cs: BigInt,
+    val Gs: BigInt,
+    val Ns: BigInt
+  )
 
   implicit class statsOps(val reads: Iterator[FASTQ]) extends AnyVal {
 
@@ -17,7 +158,7 @@ case object stats {
 
     def minLength: Int =
       reads.map(_.value.length).min
-  
+
     def averageExpectedErrors: BigDecimal =
       sizeAndAvgEE._2
 

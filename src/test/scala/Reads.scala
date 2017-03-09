@@ -21,6 +21,26 @@ class ReadsTest extends FunSuite {
     wr.close
   }
 
+  def basicStats(reads: => Iterator[FASTQ]): Unit = {
+
+    println { s"Average length: ${reads.averageLength}"                   }
+
+    val maxLength =
+      reads.maxLength
+
+    println { s"Maximum length: ${maxLength}" }
+
+    println { s"Average expected errors: ${reads.averageExpectedErrors}"  }
+    println { s"Maximum expected error: ${reads.maximumExpectedErrors}"   }
+    println { s"Minimum expected errors: ${reads.minimumExpectedErrors}"  }
+
+    println { "Average expected error per position: \"position: error\"" }
+
+    reads.averageExpectedErrorPerPosition(maxPos = maxLength - 1).zipWithIndex foreach { case (err,pos) =>
+      println { s"${pos}: ${err}" }
+    }
+  }
+
   lazy val in: File = new File("in.fastq")
   lazy val out: File = new File("out.fastq")
 
@@ -30,21 +50,14 @@ class ReadsTest extends FunSuite {
   def outReads: Iterator[FASTQ] =
     lines(out) parseFastqPhred33DropErrors
 
-  test("basic stats") {
+  def tcrReads: Iterator[FASTQ] =
+    lines(new File("data/in/TCR7_S5_L001_R1_001.fastq")) parseFastqPhred33DropErrors
 
-    println { s"Average length: ${inReads.averageLength}" }
-    println { s"Average expected errors: ${inReads.averageExpectedErrors}"  }
-    println { s"Maximum expected error: ${inReads.maximumExpectedErrors}"   }
-    println { s"Minimum expected errors: ${inReads.minimumExpectedErrors}"  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    println { "Average expected error per position: \"position: error\"" }
+  ignore("basic stats") { basicStats(inReads) }
 
-    inReads.averageExpectedErrorPerPosition(maxPos = 249).zipWithIndex foreach { case (err,pos) =>
-      println { s"${pos}: ${err}" }
-    }
-  }
-
-  test("basic preprocessing") {
+  ignore("basic preprocessing") {
 
     def preprocessAndKeepIDs(reads: Iterator[FASTQ]): Iterator[FASTQ] =
       reads
@@ -56,19 +69,17 @@ class ReadsTest extends FunSuite {
     val oh = preprocessAndKeepIDs(inReads) appendAsPhred33To out
   }
 
-  test("processed reads stats") {
+  test("TCR reads position based stats") {
 
-    println { s"Average length: ${outReads.averageLength}" }
-    println { s"Minimum length: ${outReads.minLength}" }
-    println { s"Maximum length: ${outReads.maxLength}" }
-    println { s"Average expected errors: ${outReads.averageExpectedErrors}"  }
-    println { s"Maximum expected error: ${outReads.maximumExpectedErrors}"   }
-    println { s"Minimum expected errors: ${outReads.minimumExpectedErrors}"  }
+    val posStats = toCharError(tcrReads).positionStats(449)
 
-    println { "Average expected error per position: \"position: error\"" }
-
-    outReads.averageExpectedErrorPerPosition(maxPos = 249).zipWithIndex foreach { case (err,pos) =>
-      println { s"${pos}: ${err}" }
+    println { "Ts per position" }
+    posStats.meanTs.zipWithIndex.foreach { case (ratio, pos) =>
+      println { s"${pos}: ${ratio}" }
     }
   }
+
+  ignore("processed reads stats") { basicStats(outReads) }
+  ignore("TCR reads size stats") { println { tcrReads.sizeStats } }
+  ignore("TCR reads quality stats") { println { tcrReads.qualityStats } }
 }
