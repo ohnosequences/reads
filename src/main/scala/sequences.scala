@@ -1,22 +1,20 @@
 package ohnosequences.reads
 
-import ohnosequences.fastarious.fastq._
+import ohnosequences.fastarious._
 import spire.implicits._
 
 case object sequences {
 
-  /*
-    This class groups several functions on FASTQ sequences
-  */
-  implicit class SequenceOps(val sequence: Sequence) extends AnyVal {
+  /* This class groups several functions on sequences with quality */
+  implicit class SequenceOps(val sequence: SequenceQuality) extends AnyVal {
 
-    def dropTrailingUnder(quality: Int): Sequence =
+    def dropTrailingUnder(quality: Int): SequenceQuality =
       sequence dropWhileQuality { _ <= quality }
 
-    def longestPrefixWithExpectedErrorsBelow(threshold: BigDecimal): Sequence = {
+    def longestPrefixWithExpectedErrorsBelow(threshold: BigDecimal): SequenceQuality = {
 
       @annotation.tailrec
-      def rec(acc: Sequence): Sequence =
+      def rec(acc: SequenceQuality): SequenceQuality =
         if(acc.isEmpty)
           acc
         else
@@ -28,10 +26,10 @@ case object sequences {
       rec(sequence)
     }
 
-    def longestSuffixWithExpectedErrorsBelow(threshold: BigDecimal): Sequence = {
+    def longestSuffixWithExpectedErrorsBelow(threshold: BigDecimal): SequenceQuality = {
 
       @annotation.tailrec
-      def rec(acc: Sequence): Sequence =
+      def rec(acc: SequenceQuality): SequenceQuality =
         if(acc.isEmpty)
           acc
         else

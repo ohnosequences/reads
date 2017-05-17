@@ -1,6 +1,6 @@
 package ohnosequences.reads
 
-import ohnosequences.fastarious._, fastq._, Quality._
+import ohnosequences.fastarious._, Quality._
 import spire.implicits._
 
 case object stats {
@@ -14,7 +14,7 @@ case object stats {
     val maxSize : Int
   )
 
-  implicit class sizeOps(val reads: Iterator[FASTQ]) extends AnyVal {
+  implicit class sizeOps(val reads: Iterator[SequenceQuality]) extends AnyVal {
 
     def sizeStats: SizeStats = {
 
@@ -23,7 +23,7 @@ case object stats {
 
           case ((min, s, n, max), read) => {
 
-            val l = read.value.length
+            val l = read.length
 
             val _min = if(l <= min) l else min
             val _s  = s + l
@@ -44,7 +44,7 @@ case object stats {
     val maxExpectedErrors   : BigDecimal
   )
 
-  implicit class qualityOps(val reads: Iterator[FASTQ]) extends AnyVal {
+  implicit class qualityOps(val reads: Iterator[SequenceQuality]) extends AnyVal {
 
     def qualityStats: QualityStats = {
 
@@ -53,7 +53,7 @@ case object stats {
 
           case ((min, s, n, max), read) => {
 
-            val l = read.value.quality.expectedErrors
+            val l = read.quality.expectedErrors
 
             val _min = if(l <= min) l else min
             val _s  = s + l
@@ -78,10 +78,10 @@ case object stats {
     val meanGs: Seq[BigDecimal]
   )
 
-  val toCharError: Iterator[FASTQ] => Iterator[Seq[(Char,BigDecimal)]] =
+  val toCharError: Iterator[SequenceQuality] => Iterator[Seq[(Char,BigDecimal)]] =
     _.map {
       r =>
-        (r.value.sequence zip r.value.quality.scores.map(_.asPhredScore.errorProbability))
+        (r.sequence.letters zip r.quality.scores.map(_.asPhredScore.errorProbability))
     }
 
   implicit class positionOps(val seqs: Iterator[Seq[(Char,ErrorProbability)]]) extends AnyVal {
@@ -148,28 +148,28 @@ case object stats {
     val Ns: BigInt
   )
 
-  implicit class statsOps(val reads: Iterator[FASTQ]) extends AnyVal {
+  implicit class statsOps(val reads: Iterator[SequenceQuality]) extends AnyVal {
 
     def averageLength: BigDecimal =
       sizeAndAvgLength._2
 
     def maxLength: Int =
-      reads.map(_.value.length).max
+      reads.map(_.length).max
 
     def minLength: Int =
-      reads.map(_.value.length).min
+      reads.map(_.length).min
 
     def averageExpectedErrors: BigDecimal =
       sizeAndAvgEE._2
 
     def maximumExpectedErrors: BigDecimal =
-      reads.map(_.value.quality.expectedErrors).max
+      reads.map(_.quality.expectedErrors).max
 
     def minimumExpectedErrors: BigDecimal =
-      reads.map(_.value.quality.expectedErrors).min
+      reads.map(_.quality.expectedErrors).min
 
     def expectedErrors: Iterator[Seq[ErrorProbability]] =
-      reads.map(_.value.quality.scores.map(_.asPhredScore.errorProbability))
+      reads.map(_.quality.scores.map(_.asPhredScore.errorProbability))
 
     def averageExpectedErrorPerPosition(maxPos: Position): Seq[ErrorProbability] =
       sizeAndSumPerPosition(expectedErrors, maxPos)
@@ -182,7 +182,7 @@ case object stats {
       val (sumEE, size) =
         reads.foldLeft( (0: BigDecimal, 0) ){
           (acc, r) => {
-            (acc._1 + r.value.quality.expectedErrors, acc._2 + 1)
+            (acc._1 + r.quality.expectedErrors, acc._2 + 1)
           }
         }
 
@@ -194,7 +194,7 @@ case object stats {
       val (sum, size) =
         reads.foldLeft( (0: BigInt, 0) ){
           (acc, r) => {
-            (acc._1 + r.value.length, acc._2 + 1)
+            (acc._1 + r.length, acc._2 + 1)
           }
         }
 

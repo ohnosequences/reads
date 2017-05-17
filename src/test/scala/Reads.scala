@@ -21,7 +21,7 @@ class ReadsTest extends FunSuite {
     wr.close
   }
 
-  def basicStats(reads: => Iterator[FASTQ]): Unit = {
+  def basicStats(reads: => Iterator[SequenceQuality]): Unit = {
 
     println { s"Average length: ${reads.averageLength}"                   }
 
@@ -55,23 +55,23 @@ class ReadsTest extends FunSuite {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ignore("basic stats") { basicStats(inReads) }
+  test("basic stats") { basicStats(inReads.map(_.sequence)) }
 
-  ignore("basic preprocessing") {
+  test("basic preprocessing") {
 
     def preprocessAndKeepIDs(reads: Iterator[FASTQ]): Iterator[FASTQ] =
       reads
         .map( _ updateSequence { _.longestPrefixWithExpectedErrorsBelow(1) } )
-        .filter( _.value.length >= 100 )
-        .filter( _.value.quality.expectedErrors <= 0.6 )
+        .filter( _.sequence.length >= 100 )
+        .filter( _.sequence.quality.expectedErrors <= 0.6 )
 
     val zz = Files.deleteIfExists(out.toPath)
     val oh = preprocessAndKeepIDs(inReads) appendAsPhred33To out
   }
 
-  test("TCR reads position based stats") {
+  ignore("TCR reads position based stats") {
 
-    val posStats = toCharError(tcrReads).positionStats(449)
+    val posStats = toCharError(tcrReads.map(_.sequence)).positionStats(449)
 
     println { "Ts per position" }
     posStats.meanTs.zipWithIndex.foreach { case (ratio, pos) =>
@@ -79,7 +79,7 @@ class ReadsTest extends FunSuite {
     }
   }
 
-  ignore("processed reads stats") { basicStats(outReads) }
-  ignore("TCR reads size stats") { println { tcrReads.sizeStats } }
-  ignore("TCR reads quality stats") { println { tcrReads.qualityStats } }
+  test("processed reads stats") { basicStats(outReads.map(_.sequence)) }
+  ignore("TCR reads size stats") { println { tcrReads.map(_.sequence).sizeStats } }
+  ignore("TCR reads quality stats") { println { tcrReads.map(_.sequence).qualityStats } }
 }
