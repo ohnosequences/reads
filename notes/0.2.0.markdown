@@ -1,0 +1,1 @@
+- update to fastarious 0.11.0
