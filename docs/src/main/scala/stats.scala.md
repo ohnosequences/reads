@@ -8,11 +8,11 @@ import spire.implicits._
 case object stats {
 
   type Position         = Int
-  type ErrorProbability = BigDecimal
+  type ErrorProbability = ohnosequences.fastarious.ErrorP
 
   case class SizeStats(
     val minSize : Int,
-    val meanSize: BigDecimal,
+    val meanSize: Double,
     val maxSize : Int
   )
 
@@ -36,14 +36,14 @@ case object stats {
           }
         }
 
-      SizeStats(minSize, if(sum == 0) 0: BigDecimal else BigDecimal(sum) / BigDecimal(no), maxSize )
+      SizeStats(minSize, if(sum == 0) 0: Double else sum.toDouble / no.toDouble, maxSize )
     }
   }
 
   case class QualityStats(
-    val minExpectedErrors   : BigDecimal,
-    val meanExpectedErrors  : BigDecimal,
-    val maxExpectedErrors   : BigDecimal
+    val minExpectedErrors   : Num,
+    val meanExpectedErrors  : Num,
+    val maxExpectedErrors   : Num
   )
 
   implicit class qualityOps(val reads: Iterator[SequenceQuality]) extends AnyVal {
@@ -51,7 +51,7 @@ case object stats {
     def qualityStats: QualityStats = {
 
       val (minErr, sum, no, maxErr) =
-        reads.foldLeft( (Float.MaxValue: BigDecimal, 0:BigDecimal, 0:BigInt, 0: BigDecimal) ) {
+        reads.foldLeft( (Float.MaxValue: Double, 0:Double, 0:BigInt, 0: Double) ) {
 
           case ((min, s, n, max), read) => {
 
@@ -66,21 +66,21 @@ case object stats {
           }
         }
 
-      QualityStats(minErr, if(sum == 0) 0: BigDecimal else sum / BigDecimal(no), maxErr )
+      QualityStats(minErr, if(sum == 0) 0: Double else sum.toDouble / no.toDouble, maxErr )
     }
   }
 
   case class PositionStats(
     val maxPosition: Position,
     val meanExpectedErrorsPerPosition: Seq[ErrorProbability],
-    val meanNs: Seq[BigDecimal],
-    val meanAs: Seq[BigDecimal],
-    val meanTs: Seq[BigDecimal],
-    val meanCs: Seq[BigDecimal],
-    val meanGs: Seq[BigDecimal]
+    val meanNs: Seq[Double],
+    val meanAs: Seq[Double],
+    val meanTs: Seq[Double],
+    val meanCs: Seq[Double],
+    val meanGs: Seq[Double]
   )
 
-  val toCharError: Iterator[SequenceQuality] => Iterator[Seq[(Char,BigDecimal)]] =
+  val toCharError: Iterator[SequenceQuality] => Iterator[Seq[(Char,Double)]] =
     _.map {
       r =>
         (r.sequence.letters zip r.quality.scores.map(_.asPhredScore.errorProbability))
@@ -130,19 +130,19 @@ case object stats {
 
       PositionStats(
         maxPosition = maxPos,
-        meanExpectedErrorsPerPosition = posDatas map { pd => if(pd.number == 0) 0: BigDecimal else pd.errorProbabilitySum / BigDecimal(pd.number) },
-        meanAs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.As) / BigDecimal(pd.number) },
-        meanTs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Ts) / BigDecimal(pd.number) },
-        meanCs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Cs) / BigDecimal(pd.number) },
-        meanGs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Gs) / BigDecimal(pd.number) },
-        meanNs = posDatas map { pd => if(pd.number == 0) 0:BigDecimal else BigDecimal(pd.Ns) / BigDecimal(pd.number) }
+        meanExpectedErrorsPerPosition = posDatas map { pd => if(pd.number == 0) 0: Double else pd.errorProbabilitySum / pd.number.toDouble },
+        meanAs = posDatas map { pd => if(pd.number == 0) 0:Double else pd.As.toDouble / pd.number.toDouble },
+        meanTs = posDatas map { pd => if(pd.number == 0) 0:Double else pd.Ts.toDouble / pd.number.toDouble },
+        meanCs = posDatas map { pd => if(pd.number == 0) 0:Double else pd.Cs.toDouble / pd.number.toDouble },
+        meanGs = posDatas map { pd => if(pd.number == 0) 0:Double else pd.Gs.toDouble / pd.number.toDouble },
+        meanNs = posDatas map { pd => if(pd.number == 0) 0:Double else pd.Ns.toDouble / pd.number.toDouble }
       )
     }
   }
 
   case class PositionData(
     val number: BigInt,
-    val errorProbabilitySum: BigDecimal,
+    val errorProbabilitySum: Double,
     val As: BigInt,
     val Ts: BigInt,
     val Cs: BigInt,
@@ -152,7 +152,7 @@ case object stats {
 
   implicit class statsOps(val reads: Iterator[SequenceQuality]) extends AnyVal {
 
-    def averageLength: BigDecimal =
+    def averageLength: Double =
       sizeAndAvgLength._2
 
     def maxLength: Int =
@@ -161,13 +161,13 @@ case object stats {
     def minLength: Int =
       reads.map(_.length).min
 
-    def averageExpectedErrors: BigDecimal =
+    def averageExpectedErrors: Double =
       sizeAndAvgEE._2
 
-    def maximumExpectedErrors: BigDecimal =
+    def maximumExpectedErrors: Double =
       reads.map(_.quality.expectedErrors).max
 
-    def minimumExpectedErrors: BigDecimal =
+    def minimumExpectedErrors: Double =
       reads.map(_.quality.expectedErrors).min
 
     def expectedErrors: Iterator[Seq[ErrorProbability]] =
@@ -175,14 +175,14 @@ case object stats {
 
     def averageExpectedErrorPerPosition(maxPos: Position): Seq[ErrorProbability] =
       sizeAndSumPerPosition(expectedErrors, maxPos)
-        .map { case (size,sum) => if(size == 0) 0: BigDecimal else sum / size }
+        .map { case (size,sum) => if(size == 0) 0: Double else sum / size }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // utilities
-    private def sizeAndAvgEE: (Int, BigDecimal) = {
+    private def sizeAndAvgEE: (Int, Double) = {
 
       val (sumEE, size) =
-        reads.foldLeft( (0: BigDecimal, 0) ){
+        reads.foldLeft( (0: Double, 0) ){
           (acc, r) => {
             (acc._1 + r.quality.expectedErrors, acc._2 + 1)
           }
@@ -191,7 +191,7 @@ case object stats {
       if(size == 0) (0,0) else (size, sumEE / size)
     }
 
-    private def sizeAndAvgLength: (Int, BigDecimal) = {
+    private def sizeAndAvgLength: (Int, Double) = {
 
       val (sum, size) =
         reads.foldLeft( (0: BigInt, 0) ){
@@ -200,12 +200,12 @@ case object stats {
           }
         }
 
-      if(size == 0) (0,0) else (size, BigDecimal(sum) / size)
+      if(size == 0) (0,0) else (size, sum.toDouble / size)
     }
 
 
-    private def sizeAndSumPerPosition(values: Iterator[Seq[BigDecimal]], maxPos: Int): Seq[(Int,ErrorProbability)] =
-      values.foldLeft( (0 to maxPos).map { i => (0,0:BigDecimal) } ){
+    private def sizeAndSumPerPosition(values: Iterator[Seq[Double]], maxPos: Int): Seq[(Int,ErrorProbability)] =
+      values.foldLeft( (0 to maxPos).map { i => (0,0:Double) } ){
         (accValues, vs) => {
           // if vs is empty we return accValues, if not
           vs.zipWithIndex.foldLeft(accValues) {
