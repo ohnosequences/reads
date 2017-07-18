@@ -1,22 +1,19 @@
 package ohnosequences.reads
 
 import ohnosequences.fastarious._, fastq._
+
 import java.io.File
 import java.nio.file._
 import scala.collection.JavaConverters._
-
 
 case object paired {
 
   type Read = FASTQ
 
-  case class ReadPair(val pair: (Read, Read)) extends AnyVal {
+  case class ReadPair(val left: Read, val right: Read) {
 
-    def left  : Read =
-      pair._1
-
-    def right : Read =
-      pair._2
+    def pair: (Read, Read) =
+      (left, right)
   }
 
   val parseFromFastqPhred33Lines: (Iterator[String], Iterator[String]) => Iterator[Option[ReadPair]] =
@@ -24,7 +21,7 @@ case object paired {
       (leftLines.parseFastqPhred33 zip rightLines.parseFastqPhred33)
         .map {
           _ match {
-            case (Some(r1), Some(r2)) => Some( ReadPair(r1 -> r2) )
+            case (Some(r1), Some(r2)) => Some( ReadPair(r1, r2) )
             case _                    => None
           }
         }
