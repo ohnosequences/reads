@@ -1,0 +1,7 @@
+Serious performance improvements and better types for stats.
+
+- make ReadPair a normal class, fix names
+- no BigDecimal, use Num from fastarious
+- refactor and improve all stats classes
+- use mutable Seqs (internally) for position stats
+- rename sequences to preprocessing
