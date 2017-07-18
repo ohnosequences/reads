@@ -4,7 +4,7 @@ import org.scalatest.FunSuite
 
 import testData._
 
-import ohnosequences.reads._, sequences._
+import ohnosequences.reads._, preprocessing._
 import java.nio.file._
 import scala.collection.JavaConverters._
 import java.io._
