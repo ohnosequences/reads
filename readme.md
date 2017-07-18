@@ -1,4 +1,6 @@
-## reads project
+# Reads
+
+Stats and common preprocessing functions on reads.
 
 <!-- [![](https://travis-ci.org/ohnosequences/reads.svg?branch=master)](https://travis-ci.org/ohnosequences/reads) -->
 <!-- [![](https://img.shields.io/codacy/???.svg)](https://www.codacy.com/app/era7/reads) -->
