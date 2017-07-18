@@ -8,8 +8,6 @@ import scala.collection.JavaConverters._
 
 case object paired {
 
-  type Read = FASTQ
-
   case class ReadPair(val left: Read, val right: Read) {
 
     def pair: (Read, Read) =
