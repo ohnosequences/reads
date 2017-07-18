@@ -26,10 +26,9 @@ class PositionStats extends org.scalatest.FunSuite {
     }
 
   // approx 4min on a std laptop
-  ignore("calculate position stats") {
+  test("calculate position stats") {
 
     println(s"in position stats")
-    println("\n")
 
     val in_stats =
       positionStats.positionDataWithMax(250)( inReads.map(_.sequence.pSymbols) )
@@ -37,7 +36,6 @@ class PositionStats extends org.scalatest.FunSuite {
     in_stats.zipWithIndex foreach show
 
     println(s"out position stats")
-    println("\n")
 
     val out_stats =
       positionStats.positionDataWithMax(250)( outReads.map(_.sequence.pSymbols) )

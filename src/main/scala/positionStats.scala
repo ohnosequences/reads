@@ -15,14 +15,14 @@ case object positionStats {
 
   val positionDataWithMax: Position => Iterator[Seq[PSymbol]] => Seq[PositionData] =
     maxPos => seqs =>
-      seqs.foldLeft[Seq[PositionData]]( Seq.fill(maxPos)(initialPositionData) ) {
-        (acc: Seq[PositionData], seq) =>
-          seq.zipWithIndex.foldLeft[Seq[PositionData]](acc) {
+      seqs.foldLeft[collection.mutable.Seq[PositionData]]( collection.mutable.Seq.fill(maxPos)(initialPositionData) ) {
+        (acc: collection.mutable.Seq[PositionData], seq) =>
+          seq.zipWithIndex.foldLeft[collection.mutable.Seq[PositionData]](acc) {
             case (pdatas, (PSymbol(char, errProb), pos)) => {
 
               val pdata = pdatas(pos)
 
-              pdatas.updated(
+              pdatas.update(
                 pos,
                 PositionData(
                   number            = 1 + pdata.number                                    ,
@@ -34,9 +34,11 @@ case object positionStats {
                   Ns                = if(char.toUpper == 'N') pdata.Ns + 1 else pdata.Ns
                 )
               )
+
+              pdatas
             }
           }
-      }
+      } toList
 
   case class PositionData(
     val number            : BigInt,
