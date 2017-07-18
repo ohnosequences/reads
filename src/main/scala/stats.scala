@@ -5,12 +5,11 @@ import spire.implicits._
 
 case object stats {
 
-  type Position         = Int
-  type ErrorProbability = ohnosequences.fastarious.ErrorP
+  type Position = Int
 
   case class SizeStats(
     val minSize : Int,
-    val meanSize: Double,
+    val meanSize: Num,
     val maxSize : Int
   )
 
@@ -70,7 +69,7 @@ case object stats {
 
   case class PositionStats(
     val maxPosition: Position,
-    val meanExpectedErrorsPerPosition: Seq[ErrorProbability],
+    val meanExpectedErrorsPerPosition: Seq[ErrorP],
     val meanNs: Seq[Double],
     val meanAs: Seq[Double],
     val meanTs: Seq[Double],
@@ -84,7 +83,7 @@ case object stats {
         (r.sequence.letters zip r.quality.scores.map(_.asPhredScore.errorProbability))
     }
 
-  implicit class positionOps(val seqs: Iterator[Seq[(Char,ErrorProbability)]]) extends AnyVal {
+  implicit class positionOps(val seqs: Iterator[Seq[(Char,ErrorP)]]) extends AnyVal {
 
     def positionStats(maxPos: Int): PositionStats = {
 
@@ -101,9 +100,9 @@ case object stats {
 
       val posDatas: Seq[PositionData] =
         seqs.foldLeft[Seq[PositionData]]( (0 to maxPos).map { _ => initialPositionData } ){
-          (acc: Seq[PositionData], seq: Seq[(Char, ErrorProbability)]) =>
+          (acc: Seq[PositionData], seq: Seq[(Char, ErrorP)]) =>
             seq.zipWithIndex.foldLeft[Seq[PositionData]](acc) {
-              (pdatas: Seq[PositionData], ce: ((Char, ErrorProbability), Int)) => {
+              (pdatas: Seq[PositionData], ce: ((Char, ErrorP), Int)) => {
 
                 val ((char, errProb), pos) = ce
 
@@ -168,10 +167,10 @@ case object stats {
     def minimumExpectedErrors: Double =
       reads.map(_.quality.expectedErrors).min
 
-    def expectedErrors: Iterator[Seq[ErrorProbability]] =
+    def expectedErrors: Iterator[Seq[ErrorP]] =
       reads.map(_.quality.scores.map(_.asPhredScore.errorProbability))
 
-    def averageExpectedErrorPerPosition(maxPos: Position): Seq[ErrorProbability] =
+    def averageExpectedErrorPerPosition(maxPos: Position): Seq[ErrorP] =
       sizeAndSumPerPosition(expectedErrors, maxPos)
         .map { case (size,sum) => if(size == 0) 0: Double else sum / size }
 
@@ -202,7 +201,7 @@ case object stats {
     }
 
 
-    private def sizeAndSumPerPosition(values: Iterator[Seq[Double]], maxPos: Int): Seq[(Int,ErrorProbability)] =
+    private def sizeAndSumPerPosition(values: Iterator[Seq[Double]], maxPos: Int): Seq[(Int,ErrorP)] =
       values.foldLeft( (0 to maxPos).map { i => (0,0:Double) } ){
         (accValues, vs) => {
           // if vs is empty we return accValues, if not
