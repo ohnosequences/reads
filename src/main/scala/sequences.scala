@@ -11,7 +11,7 @@ case object sequences {
     def dropTrailingUnder(quality: Int): SequenceQuality =
       sequence dropWhileQuality { _ <= quality }
 
-    def longestPrefixWithExpectedErrorsBelow(threshold: BigDecimal): SequenceQuality = {
+    def longestPrefixWithExpectedErrorsBelow(threshold: Num): SequenceQuality = {
 
       @annotation.tailrec
       def rec(acc: SequenceQuality): SequenceQuality =
@@ -26,7 +26,7 @@ case object sequences {
       rec(sequence)
     }
 
-    def longestSuffixWithExpectedErrorsBelow(threshold: BigDecimal): SequenceQuality = {
+    def longestSuffixWithExpectedErrorsBelow(threshold: Num): SequenceQuality = {
 
       @annotation.tailrec
       def rec(acc: SequenceQuality): SequenceQuality =
