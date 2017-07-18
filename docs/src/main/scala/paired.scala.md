@@ -3,22 +3,17 @@
 package ohnosequences.reads
 
 import ohnosequences.fastarious._, fastq._
+
 import java.io.File
 import java.nio.file._
 import scala.collection.JavaConverters._
 
-
 case object paired {
 
-  type Read = FASTQ
+  case class ReadPair(val left: Read, val right: Read) {
 
-  case class ReadPair(val pair: (Read, Read)) extends AnyVal {
-
-    def left  : Read =
-      pair._1
-
-    def right : Read =
-      pair._2
+    def pair: (Read, Read) =
+      (left, right)
   }
 
   val parseFromFastqPhred33Lines: (Iterator[String], Iterator[String]) => Iterator[Option[ReadPair]] =
@@ -26,7 +21,7 @@ case object paired {
       (leftLines.parseFastqPhred33 zip rightLines.parseFastqPhred33)
         .map {
           _ match {
-            case (Some(r1), Some(r2)) => Some( ReadPair(r1 -> r2) )
+            case (Some(r1), Some(r2)) => Some( ReadPair(r1, r2) )
             case _                    => None
           }
         }
@@ -49,7 +44,14 @@ case object paired {
 
 
 
-[test/scala/Reads.scala]: ../../test/scala/Reads.scala.md
-[main/scala/sequences.scala]: sequences.scala.md
-[main/scala/stats.scala]: stats.scala.md
-[main/scala/pairedEnd.scala]: pairedEnd.scala.md
+[test/scala/QualityStats.scala]: ../../test/scala/QualityStats.scala.md
+[test/scala/testData.scala]: ../../test/scala/testData.scala.md
+[test/scala/PositionStats.scala]: ../../test/scala/PositionStats.scala.md
+[test/scala/BasicPreprocessing.scala]: ../../test/scala/BasicPreprocessing.scala.md
+[test/scala/SizeStats.scala]: ../../test/scala/SizeStats.scala.md
+[main/scala/positionStats.scala]: positionStats.scala.md
+[main/scala/paired.scala]: paired.scala.md
+[main/scala/preprocessing.scala]: preprocessing.scala.md
+[main/scala/package.scala]: package.scala.md
+[main/scala/qualityStats.scala]: qualityStats.scala.md
+[main/scala/sizeStats.scala]: sizeStats.scala.md
